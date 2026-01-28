@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Доставка стройматериалов</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f2f2f2; margin:0; padding:20px; }
+    h1 { text-align:center; }
+    form { background:#fff; padding:20px; border-radius:10px; max-width:420px; margin:0 auto; }
+    label { font-size:14px; display:block; margin-bottom:14px; }
+    input, select, button { width:100%; padding:10px; font-size:16px; margin-top:6px; box-sizing:border-box; }
+    button { background:#2e7d32; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+    button:hover { background:#1b5e20; }
+  </style>
+</head>
+<body>
+
+  <h1>Доставка стройматериалов</h1>
+
+  <form id="orderForm">
+    <label>
+      Имя
+      <input type="text" id="name" placeholder="Иван" />
+    </label>
+
+    <label>
+      Телефон
+      <input type="tel" id="phone" placeholder="+998 90 000 00 00" />
+    </label>
+
+    <label>
+      Адрес доставки
+      <input type="text" id="address" placeholder="Улица, дом" />
+    </label>
+
+    <label>
+      Товар
+      <select id="product">
+        <option value="">Выберите товар</option>
+        <option value="Цемент">Цемент</option>
+        <option value="Песок">Песок</option>
+        <option value="Шпаклёвка">Шпаклёвка</option>
+        <option value="Сухие смеси">Сухие смеси</option>
+      </select>
+    </label>
+
+    <label>
+      Количество
+      <input type="number" id="quantity" placeholder="Например: 20" />
+    </label>
+
+    <label>
+      Способ оплаты
+      <select id="payment">
+        <option value="При получении">При получении</option>
+        <option value="Онлайн">Онлайн</option>
+      </select>
+    </label>
+
+    <button type="submit">Заказать доставку</button>
+  </form>
+
+  <script>
+    const form = document.getElementById('orderForm');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const order = {
+        clientName: document.getElementById('name').value.trim(),
+        clientPhone: document.getElementById('phone').value.trim(),
+        clientAddress: document.getElementById('address').value.trim(),
+        product: document.getElementById('product').value,
+        quantity: document.getElementById('quantity').value.trim(),
+        paymentMethod: document.getElementById('payment').value,
+        date: new Date().toLocaleString()
+      };
+
+      if (!order.clientName || !order.clientPhone || !order.clientAddress || !order.product || !order.quantity) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+      }
+
+      try {
+        const resp = await fetch('/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(order)
+        });
+const phoneOk = /^\+998\d{9}$/.test(order.clientPhone.replace(/\s/g,''));
+if (!phoneOk) {
+  setStatus('Телефон должен быть в формате +998XXXXXXXXX', false);
+  return;
+}
+
+        if (resp.ok) {
+          setStatus('Заказ отправлен! Проверь Telegram 📲');
+          form.reset();
+        } else {
+          const txt = await resp.text().catch(() => '');
+          setStatus('Ошибка при отправке заказа: ' + txt);
+        }
+      } catch (e) {
+        console.error(e);
+        setStatus('Не удалось подключиться к серверу');
+      }
+    });
+  </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+</body>
+</html>
